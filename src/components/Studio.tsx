@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Video, VideoOff, Mic, MicOff, Monitor, Users, Settings, Phone, Square, Volume2, VolumeX, Camera, ArrowLeft, Share2, MoreHorizontal, Record, Copy, Check } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, Monitor, Users, Settings, Phone, Square, Volume2, VolumeX, Camera, ArrowLeft, Share2, MoreHorizontal, SwordIcon as Record, Copy, Check } from 'lucide-react';
 import { useRoom } from '../hooks/useRoom';
 import VideoCall from './VideoCall';
 
