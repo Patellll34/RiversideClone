@@ -37,28 +37,29 @@ const Studio: React.FC<StudioProps> = ({ room, onLeaveRoom }) => {
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const toggleRecording = () => {
-    if (isRecording) {
-      try {
-        if (currentRecording) {
-          await stopRecording(currentRecording.id, recordingTime);
-        }
-        setIsRecording(false);
-        setRecordingTime(0);
-        setCurrentRecording(null);
-      } catch (error) {
-        console.error('Error stopping recording:', error);
+const toggleRecording = async () => {
+  if (isRecording) {
+    try {
+      if (currentRecording) {
+        await stopRecording(currentRecording.id, recordingTime);
       }
-    } else {
-      try {
-        const recording = await startRecording(`${room.name} - ${new Date().toLocaleString()}`);
-        setCurrentRecording(recording);
-        setIsRecording(true);
-      } catch (error) {
-        console.error('Error starting recording:', error);
-      }
+      setIsRecording(false);
+      setRecordingTime(0);
+      setCurrentRecording(null);
+    } catch (error) {
+      console.error('Error stopping recording:', error);
     }
-  };
+  } else {
+    try {
+      const recording = await startRecording(`${room.name} - ${new Date().toLocaleString()}`);
+      setCurrentRecording(recording);
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+    }
+  }
+};
+
 
   const handleLeaveRoom = async () => {
     if (isRecording && currentRecording) {
