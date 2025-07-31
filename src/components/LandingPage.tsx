@@ -2,19 +2,10 @@ import React, { useState } from 'react';
 import { Play, Mic, Video, Users, Shield, Zap, Star, ArrowRight } from 'lucide-react';
 
 interface LandingPageProps {
-  onLogin: (username: string) => void;
+  onShowAuth: (mode: 'signin' | 'signup') => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
-  const [showLogin, setShowLogin] = useState(false);
-  const [username, setUsername] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (username.trim()) {
-      onLogin(username.trim());
-    }
-  };
+const LandingPage: React.FC<LandingPageProps> = ({ onShowAuth }) => {
 
   return (
     <div className="min-h-screen">
@@ -37,13 +28,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
 
             <div className="flex items-center space-x-4">
               <button 
-                onClick={() => setShowLogin(true)}
+                onClick={() => onShowAuth('signin')}
                 className="text-gray-300 hover:text-white transition-colors"
               >
                 Sign In
               </button>
               <button 
-                onClick={() => setShowLogin(true)}
+                onClick={() => onShowAuth('signup')}
                 className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105"
               >
                 Get Started
@@ -76,7 +67,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button 
-                onClick={() => setShowLogin(true)}
+                onClick={() => onShowAuth('signup')}
                 className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 flex items-center group"
               >
                 Start Recording Free
@@ -160,7 +151,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
               Join thousands of creators who trust Riverside for their professional recordings.
             </p>
             <button 
-              onClick={() => setShowLogin(true)}
+              onClick={() => onShowAuth('signup')}
               className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105"
             >
               Start Your First Recording
@@ -168,45 +159,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
           </div>
         </div>
       </section>
-
-      {/* Login Modal */}
-      {showLogin && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800/90 backdrop-blur-md rounded-2xl p-8 border border-white/10 w-full max-w-md">
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">Welcome to Riverside</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Enter your name to continue
-                </label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
-                  placeholder="Your name"
-                  required
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowLogin(false)}
-                  className="flex-1 px-4 py-3 border border-white/30 text-white rounded-lg hover:bg-white/10 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white rounded-lg font-medium transition-all"
-                >
-                  Continue
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

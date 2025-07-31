@@ -1,44 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Play, Users, Settings, LogOut, Clock, Calendar, Mic, Video, MoreVertical } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import { useRoom } from '../hooks/useRoom';
 
 interface DashboardProps {
-  user: string;
-  onLogout: () => void;
-  onStartRecording: () => void;
+  onShowRoomModal: (mode: 'create' | 'join') => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartRecording }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onShowRoomModal }) => {
   const [activeTab, setActiveTab] = useState<'recordings' | 'scheduled'>('recordings');
+  const { user, signOut } = useAuth();
+  const { rooms, recordings, fetchUserRooms, fetchRecordings } = useRoom();
 
-  const mockRecordings = [
-    {
-      id: 1,
-      title: "Tech Talk with Sarah Chen",
-      duration: "1h 23m",
-      date: "2024-01-15",
-      type: "video",
-      participants: 2,
-      status: "completed"
-    },
-    {
-      id: 2,
-      title: "Marketing Strategy Deep Dive",
-      duration: "45m",
-      date: "2024-01-12",
-      type: "audio",
-      participants: 3,
-      status: "completed"
-    },
-    {
-      id: 3,
-      title: "Product Launch Discussion",
-      duration: "2h 15m",
-      date: "2024-01-10",
-      type: "video",
-      participants: 4,
-      status: "processing"
+  useEffect(() => {
+    if (user) {
+      fetchUserRooms();
+      fetchRecordings();
     }
-  ];
+  }, [user, fetchUserRooms, fetchRecordings]);
+
+  const handleLogout = async () => {
+    await signOut();
+  };
+
+  const formatDuration = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
 
   const mockScheduled = [
     {
@@ -71,12 +63,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartRecording 
             </div>
             
             <div className="flex items-center space-x-4">
-              <span className="text-gray-300">Welcome, {user}</span>
+              <span className="text-gray-300">Welcome, {user?.user_metadata?.full_name || user?.email}</span>
               <button className="text-gray-300 hover:text-white transition-colors">
                 <Settings className="w-5 h-5" />
               </button>
               <button 
-                onClick={onLogout}
+                onClick={handleLogout}
                 className="text-gray-300 hover:text-white transition-colors"
               >
                 <LogOut className="w-5 h-5" />
@@ -96,15 +88,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartRecording 
           
           <div className="flex gap-3 mt-4 md:mt-0">
             <button className="flex items-center px-4 py-2 border border-white/30 hover:border-white/50 text-white rounded-lg transition-all hover:bg-white/10">
+              onClick={() => onShowRoomModal('join')}
               <Users className="w-4 h-4 mr-2" />
-              Invite Guest
+              Join Room
             </button>
             <button 
-              onClick={onStartRecording}
+              onClick={() => onShowRoomModal('create')}
               className="flex items-center px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white rounded-lg font-medium transition-all transform hover:scale-105"
             >
               <Plus className="w-4 h-4 mr-2" />
-              New Recording
+              Create Room
             </button>
           </div>
         </div>
@@ -115,7 +108,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartRecording 
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-400 text-sm mb-1">Total Recordings</p>
-                <p className="text-2xl font-bold text-white">12</p>
+                <p className="text-2xl font-bold text-white">{recordings.length}</p>
               </div>
               <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
                 <Video className="w-6 h-6 text-purple-400" />
@@ -127,7 +120,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartRecording 
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-400 text-sm mb-1">Total Duration</p>
-                <p className="text-2xl font-bold text-white">18h 45m</p>
+                <p className="text-2xl font-bold text-white">
+                  {formatDuration(recordings.reduce((total, rec) => total + rec.duration, 0))}
+                </p>
               </div>
               <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center">
                 <Clock className="w-6 h-6 text-cyan-400" />
@@ -139,7 +134,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartRecording 
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-400 text-sm mb-1">This Month</p>
-                <p className="text-2xl font-bold text-white">5 sessions</p>
+                <p className="text-2xl font-bold text-white">{rooms.length} rooms</p>
               </div>
               <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-green-400" />
@@ -175,28 +170,33 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartRecording 
         {/* Content */}
         {activeTab === 'recordings' && (
           <div className="space-y-4">
-            {mockRecordings.map((recording) => (
+            {recordings.length === 0 ? (
+              <div className="text-center py-12">
+                <Video className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">No recordings yet</h3>
+                <p className="text-gray-400 mb-6">Create your first room to start recording</p>
+                <button 
+                  onClick={() => onShowRoomModal('create')}
+                  className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white px-6 py-3 rounded-lg font-medium transition-all"
+                >
+                  Create Room
+                </button>
+              </div>
+            ) : (
+              recordings.map((recording) => (
               <div key={recording.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      recording.type === 'video' ? 'bg-purple-500/20' : 'bg-cyan-500/20'
-                    }`}>
-                      {recording.type === 'video' ? (
-                        <Video className={`w-6 h-6 ${recording.type === 'video' ? 'text-purple-400' : 'text-cyan-400'}`} />
-                      ) : (
-                        <Mic className={`w-6 h-6 ${recording.type === 'video' ? 'text-purple-400' : 'text-cyan-400'}`} />
-                      )}
+                    <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                      <Video className="w-6 h-6 text-purple-400" />
                     </div>
                     
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-1">{recording.title}</h3>
                       <div className="flex items-center space-x-4 text-sm text-gray-400">
-                        <span>{recording.duration}</span>
+                        <span>{formatDuration(recording.duration)}</span>
                         <span>•</span>
-                        <span>{recording.date}</span>
-                        <span>•</span>
-                        <span>{recording.participants} participants</span>
+                        <span>{new Date(recording.created_at).toLocaleDateString()}</span>
                         <span>•</span>
                         <span className={`capitalize ${
                           recording.status === 'completed' ? 'text-green-400' : 'text-yellow-400'
@@ -217,7 +217,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onStartRecording 
                   </div>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         )}
 
